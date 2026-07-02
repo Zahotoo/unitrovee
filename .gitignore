@@ -3,3 +3,19 @@
 
 # IDE
 .idea/
+
+# Java / Maven
+target/
+
+# Logs
+*.log
+
+# Node (Frontend)
+node_modules/
+
+# Vite
+dist/
+
+# OS files
+.DS_Store
+Thumbs.db
