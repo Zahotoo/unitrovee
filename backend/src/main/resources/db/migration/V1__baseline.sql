@@ -1,0 +1,3 @@
+-- Baseline migration for Unitrovee
+-- Build the start point of Flyway migration history, which should be empty
+-- Follow package-by-feature, each feature should have their own migration (schools, users, items).
