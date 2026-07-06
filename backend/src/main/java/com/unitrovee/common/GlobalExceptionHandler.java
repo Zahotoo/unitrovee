@@ -1,0 +1,44 @@
+package com.unitrovee.common;
+
+import com.unitrovee.common.exception.ResourceNotFoundException;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+@Slf4j
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    // 404 - a domain "not found" exception bubbled up from a service
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNotFound(ResourceNotFoundException ex) {
+        ErrorResponse body = ErrorResponse.of("RESOURCE_NOT_FOUND", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
+
+    // 400 - Bean Validation failed on a @Valid request body
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
+        // build a readable message from the first field error.
+        String message = ex.getBindingResult().getFieldErrors().stream()
+                .findFirst()
+                .map(fieldError -> fieldError.getField() + ": " + fieldError.getDefaultMessage())
+                .orElse("Validation failed");
+        ErrorResponse body = ErrorResponse.of("VALIDATION_ERROR", message);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+
+    // 500 - catch-all safety net for anything we didn't explicitly handle.
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleGeneric(Exception ex) {
+        // Log the FULL detail server-side, but never leak internals to the client
+        log.error("Unhandled exception", ex);
+        ErrorResponse body = ErrorResponse.of("INTERNAL_ERROR", "An unexpected error occurred.");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
+    }
+}
