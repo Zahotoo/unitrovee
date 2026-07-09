@@ -13,7 +13,7 @@ import org.testcontainers.utility.DockerImageName;
  */
 @SpringBootTest     // start the complete Spring application context
 @Testcontainers     // let Testcontainers manage container start/stop
-public class AbstractIntegrationTest {
+public abstract class AbstractIntegrationTest {
 
     @Container
     @ServiceConnection
