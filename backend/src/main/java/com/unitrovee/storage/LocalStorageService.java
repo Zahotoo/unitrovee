@@ -1,6 +1,7 @@
 package com.unitrovee.storage;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -34,9 +35,13 @@ public class LocalStorageService implements StorageService {
         try {
             Files.createDirectories(root);      // ensure the target folder exists
             // generate our own random key: only reuse the extension.
-            String ext = StringUtils.getFilenameExtension(file.getOriginalFilename());
+            String rawExt = StringUtils.getFilenameExtension(file.getOriginalFilename());
+            String ext = (rawExt != null && rawExt.matches("[a-zA-Z0-9]{1,10}")) ? rawExt : null;
             String key = UUID.randomUUID() + (ext != null ? "." + ext : "");
-            Files.copy(file.getInputStream(), root.resolve(key), StandardCopyOption.REPLACE_EXISTING);
+
+            try (InputStream in = file.getInputStream()) {
+                Files.copy(in, root.resolve(key), StandardCopyOption.REPLACE_EXISTING);
+            }
             return key;
         } catch (IOException e) {
             throw new RuntimeException("Failed to store file", e);
