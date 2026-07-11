@@ -12,12 +12,16 @@ import org.testcontainers.utility.DockerImageName;
  * spun up by Testcontainers.
  */
 @SpringBootTest     // start the complete Spring application context
-@Testcontainers     // let Testcontainers manage container start/stop
+// @Testcontainers     // let Testcontainers manage container start/stop
 public abstract class AbstractIntegrationTest {
 
-    @Container
+    // @Container
     @ServiceConnection
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(
             DockerImageName.parse("pgvector/pgvector:pg16").asCompatibleSubstituteFor("postgres")
     );
+
+    static {
+        postgres.start();
+    }
 }
