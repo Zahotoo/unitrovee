@@ -1,7 +1,6 @@
 -- V3__seed_schools.sql
 -- seed the 13 supported Irish institutions.
 -- Schools are reference data, stored in the table rather than hard-coded
-
 INSERT INTO schools (name, short_name, email_domain, city, active, created_at, updated_at)
 VALUES
     ('University College Dublin',                       'UCD',  'ucdconnect.ie',         'Dublin',    TRUE, NOW(), NOW()),
