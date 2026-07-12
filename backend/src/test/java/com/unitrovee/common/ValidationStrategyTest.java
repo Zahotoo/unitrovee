@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @Valid on a @RequestBody triggers Bean Validation -> a failure throws
  * MethodArgumentNotValidException -> GlobalExceptionHandler turns it into a 400 + VALIDATION_ERROR envelope.
  */
-@WebMvcTest
+@WebMvcTest(controllers = ValidationStrategyTest.DemoController.class)
 @Import(ValidationStrategyTest.DemoController.class)
 public class ValidationStrategyTest {
 
