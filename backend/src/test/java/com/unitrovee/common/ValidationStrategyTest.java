@@ -10,6 +10,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
  * MethodArgumentNotValidException -> GlobalExceptionHandler turns it into a 400 + VALIDATION_ERROR envelope.
  */
 @WebMvcTest(controllers = ValidationStrategyTest.DemoController.class)
+@AutoConfigureMockMvc(addFilters = false)
 @Import(ValidationStrategyTest.DemoController.class)
 public class ValidationStrategyTest {
 
