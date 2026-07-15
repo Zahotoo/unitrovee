@@ -1,5 +1,7 @@
 package com.unitrovee.common;
 
+import com.unitrovee.auth.exception.EmailAlreadyExistsException;
+import com.unitrovee.auth.exception.UnsupportedSchoolEmailException;
 import com.unitrovee.common.exception.ResourceNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -17,6 +19,22 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleNotFound(ResourceNotFoundException ex) {
         ErrorResponse body = ErrorResponse.of("RESOURCE_NOT_FOUND", ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
+
+    // 409 - an account already uses this normalized email address
+    @ExceptionHandler(EmailAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleEmailAlreadyExists(EmailAlreadyExistsException ex) {
+        ErrorResponse body = ErrorResponse.of("EMAIL_ALREADY_EXISTS", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
+
+    // 400 - valid email syntax, but not from an active supported school
+    @ExceptionHandler(UnsupportedSchoolEmailException.class)
+    public ResponseEntity<ErrorResponse> handleUnsupportedSchoolEmail(UnsupportedSchoolEmailException ex) {
+        ErrorResponse body = ErrorResponse.of("UNSUPPORTED_SCHOOL_EMAIL", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
 
