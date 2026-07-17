@@ -1,0 +1,10 @@
+<svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>Unitrovee logo</title>
+  <desc>A circular student swap loop in deep blue, white, and orange.</desc>
+  <rect width="96" height="96" rx="28" fill="#003E80"/>
+  <path d="M24 37A30 30 0 0 1 75.8 26.5" stroke="white" stroke-width="8" stroke-linecap="round"/>
+  <path d="M66.5 17 78 27.2 64 34" stroke="#F2994A" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M72 59A30 30 0 0 1 20.2 69.5" stroke="white" stroke-width="8" stroke-linecap="round"/>
+  <path d="M29.5 79 18 68.8 32 62" stroke="#F2994A" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M48 32V64" stroke="white" stroke-width="8" stroke-linecap="round"/>
+</svg>
