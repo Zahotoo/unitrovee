@@ -1,16 +1,23 @@
 package com.unitrovee.auth;
 
+import com.unitrovee.auth.dto.LoginRequest;
+import com.unitrovee.auth.dto.LoginResponse;
 import com.unitrovee.auth.dto.RegisterRequest;
 import com.unitrovee.auth.dto.RegisterResponse;
+import com.unitrovee.auth.exception.EmailAlreadyExistsException;
+import com.unitrovee.auth.exception.UnsupportedSchoolEmailException;
 import com.unitrovee.auth.mapper.AuthMapper;
 import com.unitrovee.school.SchoolRepository;
 import com.unitrovee.school.domain.School;
+import com.unitrovee.security.JwtService;
 import com.unitrovee.user.UserRepository;
 import com.unitrovee.user.domain.Role;
 import com.unitrovee.user.domain.User;
-import com.unitrovee.auth.exception.EmailAlreadyExistsException;
-import com.unitrovee.auth.exception.UnsupportedSchoolEmailException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +32,8 @@ public class AuthServiceImpl implements AuthService {
     private final SchoolRepository schoolRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthMapper authMapper;
+    private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
 
     @Override
     @Transactional
@@ -56,5 +65,21 @@ public class AuthServiceImpl implements AuthService {
 
         User savedUser = userRepository.save(user);
         return authMapper.toRegisterResponse(savedUser);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public LoginResponse login(LoginRequest request) {
+        String email = request.email().trim().toLowerCase(Locale.ROOT);
+
+        // spring loads the user and compares the raw password with the BCrypt hash
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(email, request.password())
+        );
+
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        String accessToken = jwtService.generateToken(userDetails);
+
+        return new LoginResponse(accessToken);
     }
 }
