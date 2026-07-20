@@ -1,9 +1,6 @@
 package com.unitrovee.auth;
 
-import com.unitrovee.auth.dto.LoginRequest;
-import com.unitrovee.auth.dto.LoginResponse;
-import com.unitrovee.auth.dto.RegisterRequest;
-import com.unitrovee.auth.dto.RegisterResponse;
+import com.unitrovee.auth.dto.*;
 import com.unitrovee.common.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +33,14 @@ public class AuthController {
             @Valid @RequestBody LoginRequest request
     ) {
         LoginResponse response = authService.login(request);
+        return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    @PostMapping("/verify")
+    public ResponseEntity<ApiResponse<VerifyEmailResponse>> verifyEmail(
+            @Valid @RequestBody VerifyEmailRequest request
+    ) {
+        VerifyEmailResponse response = authService.verifyEmail(request);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 }

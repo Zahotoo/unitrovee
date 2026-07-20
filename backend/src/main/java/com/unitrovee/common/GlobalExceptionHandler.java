@@ -3,6 +3,7 @@ package com.unitrovee.common;
 import com.unitrovee.auth.exception.EmailAlreadyExistsException;
 import com.unitrovee.auth.exception.UnsupportedSchoolEmailException;
 import com.unitrovee.common.exception.ResourceNotFoundException;
+import com.unitrovee.auth.exception.InvalidVerificationCodeException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -49,6 +50,14 @@ public class GlobalExceptionHandler {
                 .map(fieldError -> fieldError.getField() + ": " + fieldError.getDefaultMessage())
                 .orElse("Validation failed");
         ErrorResponse body = ErrorResponse.of("VALIDATION_ERROR", message);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+
+    // 400 - unknown, wrong, or expired email-verification code
+    @ExceptionHandler(InvalidVerificationCodeException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidVerificationCode(InvalidVerificationCodeException ex) {
+        ErrorResponse body = ErrorResponse.of("INVALID_VERIFICATION_CODE", ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 

@@ -6,6 +6,8 @@ import com.unitrovee.school.domain.School;
 import com.unitrovee.user.UserRepository;
 import com.unitrovee.user.domain.Role;
 import com.unitrovee.user.domain.User;
+import com.unitrovee.auth.verification.EmailVerificationCode;
+import com.unitrovee.auth.verification.EmailVerificationCodeRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -19,6 +21,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.time.Instant;
+
 @AutoConfigureMockMvc
 @Transactional
 class AuthRegistrationIntegrationTest extends AbstractIntegrationTest {
@@ -31,6 +35,8 @@ class AuthRegistrationIntegrationTest extends AbstractIntegrationTest {
     PasswordEncoder passwordEncoder;
     @Autowired
     SchoolRepository schoolRepository;
+    @Autowired
+    EmailVerificationCodeRepository verificationCodeRepository;
 
     @Test
     void register_createsUnverifiedStudentForMatchingSchool() throws Exception {
@@ -54,12 +60,16 @@ class AuthRegistrationIntegrationTest extends AbstractIntegrationTest {
 
         User savedUser = userRepository.findByEmail(email).orElseThrow();
 
+        EmailVerificationCode verificationCode = verificationCodeRepository.findByUserId(savedUser.getId()).orElseThrow();
+
         assertThat(savedUser.getPasswordHash()).isNotEqualTo(password);
         assertThat(passwordEncoder.matches(password, savedUser.getPasswordHash())).isTrue();
         assertThat(savedUser.getRole()).isEqualTo(Role.STUDENT);
         assertThat(savedUser.isEmailVerified()).isFalse();
         assertThat(savedUser.getReputationScore()).isZero();
         assertThat(savedUser.getSchool().getEmailDomain()).isEqualTo("ucdconnect.ie");
+        assertThat(verificationCode.getCodeHash()).hasSize(64);
+        assertThat(verificationCode.getExpiresAt()).isAfter(Instant.now());
     }
 
     @Test
