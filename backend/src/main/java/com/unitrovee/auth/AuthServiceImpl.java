@@ -13,6 +13,14 @@ import com.unitrovee.security.JwtService;
 import com.unitrovee.user.UserRepository;
 import com.unitrovee.user.domain.Role;
 import com.unitrovee.user.domain.User;
+import com.unitrovee.auth.dto.VerifyEmailRequest;
+import com.unitrovee.auth.exception.InvalidVerificationCodeException;
+import com.unitrovee.auth.dto.VerifyEmailResponse;
+import com.unitrovee.auth.verification.EmailVerificationCode;
+import com.unitrovee.auth.verification.EmailVerificationCodeRepository;
+import com.unitrovee.auth.verification.VerificationCodeHasher;
+import com.unitrovee.auth.verification.VerificationCodeGenerator;
+import com.unitrovee.auth.verification.VerificationEmailSender;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,6 +31,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Locale;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.time.Instant;
+import java.time.Duration;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +46,9 @@ public class AuthServiceImpl implements AuthService {
     private final AuthMapper authMapper;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final EmailVerificationCodeRepository verificationCodeRepository;
+    private final VerificationCodeGenerator verificationCodeGenerator;
+    private final VerificationEmailSender verificationEmailSender;
 
     @Override
     @Transactional
@@ -64,6 +79,17 @@ public class AuthServiceImpl implements AuthService {
         user.setReputationScore(0);
 
         User savedUser = userRepository.save(user);
+
+        String plainCode = verificationCodeGenerator.generate();
+
+        EmailVerificationCode verificationCode = new EmailVerificationCode();
+        verificationCode.setUser(savedUser);
+        verificationCode.setCodeHash(VerificationCodeHasher.hash(plainCode));
+        verificationCode.setExpiresAt(Instant.now().plus(Duration.ofMinutes(15)));
+
+        verificationCodeRepository.save(verificationCode);
+        verificationEmailSender.sendVerificationCode(savedUser.getEmail(), plainCode);
+
         return authMapper.toRegisterResponse(savedUser);
     }
 
@@ -81,5 +107,30 @@ public class AuthServiceImpl implements AuthService {
         String accessToken = jwtService.generateToken(userDetails);
 
         return new LoginResponse(accessToken);
+    }
+
+    @Override
+    @Transactional
+    public VerifyEmailResponse verifyEmail(VerifyEmailRequest request) {
+        String                  email               = request.email().trim().toLowerCase(Locale.ROOT);
+        User                    user                = userRepository.findByEmail(email).orElseThrow(() -> new InvalidVerificationCodeException("Verification code is invalid or expired"));
+        EmailVerificationCode   verificationCode    = verificationCodeRepository.findByUserId(user.getId()).orElseThrow(() -> new InvalidVerificationCodeException("Verification code is invalid or expired"));
+        boolean                 isExpired           = !verificationCode.getExpiresAt().isAfter(Instant.now());
+        String                  requestCodeHash     = VerificationCodeHasher.hash(request.code());
+
+        // constant-time comparison avoids leaking information through timing
+        boolean codeMatches = MessageDigest.isEqual(
+                verificationCode.getCodeHash().getBytes(StandardCharsets.UTF_8),
+                requestCodeHash.getBytes(StandardCharsets.UTF_8)
+        );
+
+        if (isExpired || !codeMatches) {
+            throw new InvalidVerificationCodeException("Verification code is invalid or expired");
+        }
+
+        user.setEmailVerified(true);
+        verificationCodeRepository.delete(verificationCode);
+
+        return new VerifyEmailResponse(user.getEmail(), true);
     }
 }
