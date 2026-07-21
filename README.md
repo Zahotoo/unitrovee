@@ -10,7 +10,7 @@
 
 Unitrovee helps verified students buy, sell, swap, or give away useful items for campus life—such as textbooks, furniture, electronics, bikes, and kitchen essentials. It is being built as a portfolio-quality, full-stack learning project with a React frontend and a Spring Boot API.
 
-> **Project status — active development.** The backend foundation, supported-school directory, registration, login, JWT authentication, local file-storage abstraction, database migrations, API documentation, and integration-test foundation are in place. The React frontend and marketplace listings are not implemented yet.
+> **Project status — active development.** Milestone 2 — Authentication, Users & Schools is complete. The backend foundation, supported-school directory, registration, email verification, login, JWT authentication, role-based access control, CORS configuration, local file-storage abstraction, database migrations, API documentation, and integration-test foundation are in place. The React frontend and marketplace listings are not implemented yet.
 
 ---
 
@@ -43,7 +43,7 @@ flowchart LR
     E --> F["Complete the exchange"]
 ```
 
-Email-domain matching is implemented now; a verification-code flow is a planned trust-root feature before listings are treated as verified-student listings.
+Email-domain matching and the verification-code flow are implemented now; verified student status is established before future marketplace listings are treated as trusted student listings.
 
 ## Technology
 
@@ -67,13 +67,14 @@ The MVP focuses on one complete exchange loop:
 Register + verify → publish item → search/filter → view/favorite/contact → update status
 ```
 
-| Phase | Focus | Status |
-| --- | --- | --- |
-| 1 | Backend foundation | Complete |
-| 2 | Authentication, users, and schools | In progress |
-| 3 | Item listings API and image endpoints | Planned |
-| 4–5 | React foundation and MVP pages | Planned |
-| 6 | Trust, moderation, reviews, and Redis | Planned |
-| 7 | Messaging with WebSocket/STOMP | Planned |
-| 8 | RAG support assistant with Spring AI and pgvector | Planned |
-| 9 | Deployment and documentation | Planned |
+| Phase | Focus | Status         |
+| --- | --- |----------------|
+| 0 | Setup & Tooling | Complete ✅ |
+| 1 | Backend foundation | Complete ✅    |
+| 2 | Authentication, users, and schools | Complete ✅    |
+| 3 | Item listings API and image endpoints | In progress 🛠️   |
+| 4–5 | React foundation and MVP pages | Planned     🚩 |
+| 6 | Trust, moderation, reviews, and Redis | Planned    🚩    |
+| 7 | Messaging with WebSocket/STOMP | Planned    🚩    |
+| 8 | RAG support assistant with Spring AI and pgvector | Planned     🚩   |
+| 9 | Deployment and documentation | Planned    🚩    |
