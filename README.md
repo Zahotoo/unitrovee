@@ -39,8 +39,9 @@ flowchart LR
     A["Register with a supported student email"] --> B["Verify student identity"]
     B --> C["Publish a listing"]
     C --> D["Search, filter, and save items"]
-    D --> E["Contact the owner"]
-    E --> F["Complete the exchange"]
+    D --> E["Request purchase or offer a swap"]
+    E --> F["Agree a campus meetup in messages"]
+    F --> G["Confirm the offline exchange"]
 ```
 
 Email-domain matching and the verification-code flow are implemented now; verified student status is established before future marketplace listings are treated as trusted student listings.
@@ -61,7 +62,10 @@ Email-domain matching and the verification-code flow are implemented now; verifi
 
 ## Roadmap
 
-The MVP focuses on one complete exchange loop:
+The planned product flow supports sales, free items, and item-for-item swaps. Payments remain
+offline: the platform records confirmations but never processes or stores payment details.
+
+The MVP foundation focuses on this listing loop:
 
 ```text
 Register + verify → publish item → search/filter → view/favorite/contact → update status
@@ -75,6 +79,6 @@ Register + verify → publish item → search/filter → view/favorite/contact �
 | 3 | Item listings API and image endpoints | In progress 🛠️   |
 | 4–5 | React foundation and MVP pages | Planned     🚩 |
 | 6 | Trust, moderation, reviews, and Redis | Planned    🚩    |
-| 7 | Messaging with WebSocket/STOMP | Planned    🚩    |
+| 7 | Messaging and trade negotiation | Planned    🚩    |
 | 8 | RAG support assistant with Spring AI and pgvector | Planned     🚩   |
 | 9 | Deployment and documentation | Planned    🚩    |
