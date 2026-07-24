@@ -4,6 +4,8 @@ import com.unitrovee.auth.exception.EmailAlreadyExistsException;
 import com.unitrovee.auth.exception.UnsupportedSchoolEmailException;
 import com.unitrovee.common.exception.ResourceNotFoundException;
 import com.unitrovee.auth.exception.InvalidVerificationCodeException;
+import com.unitrovee.item.exception.ItemNotEditableException;
+import com.unitrovee.item.exception.InvalidItemUpdateException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -82,6 +84,20 @@ public class GlobalExceptionHandler {
                 "Invalid email or password"
         );
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
+    }
+
+
+    @ExceptionHandler(ItemNotEditableException.class)
+    public ResponseEntity<ErrorResponse> handleItemNotEditable(ItemNotEditableException ex) {
+        ErrorResponse body = ErrorResponse.of("ITEM_NOT_EDITABLE", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
+
+    @ExceptionHandler(InvalidItemUpdateException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidItemUpdate(InvalidItemUpdateException ex) {
+        ErrorResponse body = ErrorResponse.of("VALIDATION_ERROR", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
 

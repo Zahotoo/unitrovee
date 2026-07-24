@@ -3,6 +3,7 @@ package com.unitrovee.item;
 import com.unitrovee.category.CategoryRepository;
 import com.unitrovee.category.domain.Category;
 import com.unitrovee.common.exception.ResourceNotFoundException;
+import com.unitrovee.item.domain.ExchangeType;
 import com.unitrovee.item.domain.Item;
 import com.unitrovee.item.domain.ItemStatus;
 import com.unitrovee.item.dto.ItemCreateRequest;
@@ -11,10 +12,15 @@ import com.unitrovee.item.mapper.ItemMapper;
 import com.unitrovee.user.UserRepository;
 import com.unitrovee.user.domain.Role;
 import com.unitrovee.user.domain.User;
+import com.unitrovee.item.dto.ItemUpdateRequest;
+import com.unitrovee.item.exception.ItemNotEditableException;
+import com.unitrovee.item.exception.InvalidItemUpdateException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
 
 @Service
 @RequiredArgsConstructor
@@ -55,5 +61,62 @@ public class ItemServiceImpl implements ItemService {
 
         Item savedItem = itemRepository.save(item);
         return itemMapper.toCreateResponse(savedItem);
+    }
+
+    @Override
+    @Transactional
+    public void updateItem(Long itemId, String authenticatedEmail, ItemUpdateRequest request) {
+        Item item = itemRepository.findById(itemId).orElseThrow(() -> new ResourceNotFoundException("Item not found"));
+
+        if (!item.getOwner().getEmail().equals(authenticatedEmail)) {
+            throw new AccessDeniedException("Only the item owner may update this item");
+        }
+
+        if (item.getStatus() != ItemStatus.DRAFT && item.getStatus() != ItemStatus.AVAILABLE) {
+            throw new ItemNotEditableException("Only DRAFT or AVAILABLE items can be updated");
+        }
+
+        if (request.categoryId() != null) {
+            Category category = categoryRepository.findById(request.categoryId())
+                    .filter(Category::isActive)
+                    .orElseThrow(() -> new ResourceNotFoundException("Active category not found"));
+
+            item.setCategory(category);
+        }
+
+        if (request.exchangeType() != null && request.exchangeType() != ExchangeType.SELL && request.priceAmount() != null) {
+            throw new InvalidItemUpdateException("FREE and SWAP must not include a price");
+        }
+
+        ExchangeType updatedExchangeType = request.exchangeType() == null ? item.getExchangeType() : request.exchangeType();
+        BigDecimal updatedPriceAmount = item.getPriceAmount();
+
+        if (request.exchangeType() != null && request.exchangeType() != ExchangeType.SELL) {
+            updatedPriceAmount = null;
+        } else if (request.priceAmount() != null) {
+            updatedPriceAmount = request.priceAmount();
+        }
+
+        if (updatedExchangeType == ExchangeType.SELL && (updatedPriceAmount == null || updatedPriceAmount.signum() <= 0)) {
+            throw new InvalidItemUpdateException("SELL requires a positive price");
+        }
+        item.setExchangeType(updatedExchangeType);
+        item.setPriceAmount(updatedPriceAmount);
+
+        if (request.title() != null) {
+            item.setTitle(request.title().trim());
+        }
+
+        if (request.description() != null) {
+            item.setDescription(request.description().trim());
+        }
+
+        if (request.condition() != null) {
+            item.setCondition(request.condition());
+        }
+
+        if (request.locationHint() != null) {
+            item.setLocationHint(request.locationHint().trim());
+        }
     }
 }
