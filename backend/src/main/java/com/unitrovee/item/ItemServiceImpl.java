@@ -27,6 +27,7 @@ import java.math.BigDecimal;
 public class ItemServiceImpl implements ItemService {
 
     private final ItemRepository itemRepository;
+    private final ItemImageRepository itemImageRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final ItemMapper itemMapper;
@@ -118,5 +119,30 @@ public class ItemServiceImpl implements ItemService {
         if (request.locationHint() != null) {
             item.setLocationHint(request.locationHint().trim());
         }
+    }
+
+    @Override
+    @Transactional
+    public void deleteItem(Long itemId, String authenticatedEmail) {
+        Item item = itemRepository.findById(itemId).orElseThrow(() -> new ResourceNotFoundException("Item not found"));
+
+        if (!item.getOwner().getEmail().equals(authenticatedEmail)) {
+            throw new AccessDeniedException("Only the item owner may delete this item");
+        }
+
+        if (item.getStatus() == ItemStatus.DRAFT) {
+            itemImageRepository.deleteAll(
+                    itemImageRepository.findByItemIdOrderBySortOrderAsc(item.getId())
+            );
+            itemRepository.delete(item);
+            return;
+        }
+
+        if (item.getStatus() == ItemStatus.AVAILABLE) {
+            item.setStatus(ItemStatus.ARCHIVED);
+            return;
+        }
+
+        throw new ItemNotEditableException("Only DRAFT items can be deleted and AVAILABLE items can be archived");
     }
 }

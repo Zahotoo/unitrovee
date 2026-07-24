@@ -8,13 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import com.unitrovee.item.dto.ItemUpdateRequest;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 
 @RestController
 @RequestMapping("/api/items")
@@ -39,6 +34,15 @@ public class ItemController {
             @Valid @RequestBody ItemUpdateRequest request
     ) {
         itemService.updateItem(itemId, authentication.getName(), request);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{itemId}")
+    public ResponseEntity<Void> deleteItem(
+            @PathVariable Long itemId,
+            Authentication authentication
+    ) {
+        itemService.deleteItem(itemId, authentication.getName());
         return ResponseEntity.noContent().build();
     }
 }
