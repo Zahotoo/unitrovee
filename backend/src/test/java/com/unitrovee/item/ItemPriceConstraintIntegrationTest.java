@@ -9,6 +9,7 @@ import com.unitrovee.school.SchoolRepository;
 import com.unitrovee.school.domain.School;
 import com.unitrovee.user.UserRepository;
 import com.unitrovee.user.domain.User;
+import com.unitrovee.item.domain.ItemCondition;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -44,7 +45,7 @@ public class ItemPriceConstraintIntegrationTest extends AbstractIntegrationTest 
         item.setCategory(category);
         item.setTitle("Free notebook");
         item.setDescription("This intentionally has an invalid price.");
-        item.setCondition("GOOD");
+        item.setCondition(ItemCondition.PRE_OWNED_GOOD);
         item.setExchangeType(ExchangeType.FREE);
         item.setPriceAmount(new BigDecimal("1.00"));
 
@@ -73,7 +74,7 @@ public class ItemPriceConstraintIntegrationTest extends AbstractIntegrationTest 
         item.setCategory(category);
         item.setTitle("Laptop for sale");
         item.setDescription("This intentionally has no price.");
-        item.setCondition("GOOD");
+        item.setCondition(ItemCondition.PRE_OWNED_GOOD);
         item.setExchangeType(ExchangeType.SELL);
 
         assertThatThrownBy(() -> itemRepository.saveAndFlush(item))

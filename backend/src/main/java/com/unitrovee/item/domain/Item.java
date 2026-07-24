@@ -44,8 +44,9 @@ public class Item extends BaseEntity {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String description;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
-    private String condition;
+    private ItemCondition condition;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "exchange_type", nullable = false, length = 20)

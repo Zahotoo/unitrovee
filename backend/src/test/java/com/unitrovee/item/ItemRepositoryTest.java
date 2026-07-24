@@ -10,6 +10,7 @@ import com.unitrovee.school.SchoolRepository;
 import com.unitrovee.school.domain.School;
 import com.unitrovee.user.UserRepository;
 import com.unitrovee.user.domain.User;
+import com.unitrovee.item.domain.ItemCondition;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,7 +46,7 @@ public class ItemRepositoryTest extends AbstractIntegrationTest {
         item.setCategory(category);
         item.setTitle("Calculus textbook");
         item.setDescription("Clean copy, with no missing pages.");
-        item.setCondition("GOOD");
+        item.setCondition(ItemCondition.PRE_OWNED_GOOD);
         item.setExchangeType(ExchangeType.SELL);
         item.setPriceAmount(new BigDecimal("25.00"));
         item.setStatus(ItemStatus.DRAFT);
