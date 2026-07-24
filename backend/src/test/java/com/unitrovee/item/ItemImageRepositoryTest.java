@@ -10,6 +10,7 @@ import com.unitrovee.school.SchoolRepository;
 import com.unitrovee.school.domain.School;
 import com.unitrovee.user.UserRepository;
 import com.unitrovee.user.domain.User;
+import com.unitrovee.item.domain.ItemCondition;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
@@ -120,7 +121,7 @@ public class ItemImageRepositoryTest extends AbstractIntegrationTest {
         item.setCategory(category);
         item.setTitle("Item with images");
         item.setDescription("Used to test image ordering.");
-        item.setCondition("GOOD");
+        item.setCondition(ItemCondition.PRE_OWNED_GOOD);
         item.setExchangeType(ExchangeType.SELL);
         item.setPriceAmount(new BigDecimal("20.00"));
 

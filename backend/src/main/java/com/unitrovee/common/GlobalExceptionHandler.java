@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 
 @Slf4j
 @RestControllerAdvice
@@ -58,6 +59,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidVerificationCodeException.class)
     public ResponseEntity<ErrorResponse> handleInvalidVerificationCode(InvalidVerificationCodeException ex) {
         ErrorResponse body = ErrorResponse.of("INVALID_VERIFICATION_CODE", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+
+    // 400 - malformed JSON or unsupported enum value in a request body
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleUnreadableRequest(HttpMessageNotReadableException ex) {
+        ErrorResponse body = ErrorResponse.of(
+                "VALIDATION_ERROR",
+                "Request body contains an invalid value"
+        );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
