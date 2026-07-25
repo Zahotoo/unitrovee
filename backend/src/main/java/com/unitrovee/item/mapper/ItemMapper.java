@@ -2,6 +2,7 @@ package com.unitrovee.item.mapper;
 
 import com.unitrovee.item.domain.Item;
 import com.unitrovee.item.dto.ItemCreateResponse;
+import com.unitrovee.item.dto.ItemListResponse;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -19,6 +20,22 @@ public class ItemMapper {
                 item.getPriceAmount(),
                 item.getStatus(),
                 item.getLocationHint()
+        );
+    }
+
+    public ItemListResponse toListResponse(Item item) {
+        return new ItemListResponse(
+                item.getId(),
+                item.getTitle(),
+                item.getCondition(),
+                item.getExchangeType(),
+                item.getPriceAmount(),
+                item.getLocationHint(),
+                item.getSchool().getId(),
+                item.getSchool().getName(),
+                item.getCategory().getId(),
+                item.getCategory().getName(),
+                item.getCreatedAt()
         );
     }
 }

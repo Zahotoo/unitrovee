@@ -15,6 +15,10 @@ import com.unitrovee.user.domain.User;
 import com.unitrovee.item.dto.ItemUpdateRequest;
 import com.unitrovee.item.exception.ItemNotEditableException;
 import com.unitrovee.item.exception.InvalidItemUpdateException;
+import com.unitrovee.common.PageResponse;
+import com.unitrovee.item.dto.ItemListResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -144,5 +148,27 @@ public class ItemServiceImpl implements ItemService {
         }
 
         throw new ItemNotEditableException("Only DRAFT items can be deleted and AVAILABLE items can be archived");
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<ItemListResponse> getPublicItems(
+            Long schoolId,
+            Long categoryId,
+            ExchangeType exchangeType,
+            String keyword,
+            Pageable pageable
+    ) {
+        Page<ItemListResponse> items = itemRepository.findAll(
+                ItemSpecifications.publicAvailableItems(
+                        schoolId,
+                        categoryId,
+                        exchangeType,
+                        keyword
+                ),
+                pageable
+        ).map(itemMapper::toListResponse);
+
+        return PageResponse.from(items);
     }
 }
