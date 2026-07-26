@@ -6,6 +6,7 @@ import com.unitrovee.item.dto.ItemUpdateRequest;
 import com.unitrovee.common.PageResponse;
 import com.unitrovee.item.domain.ExchangeType;
 import com.unitrovee.item.dto.ItemListResponse;
+import com.unitrovee.item.dto.ItemDetailResponse;
 import org.springframework.data.domain.Pageable;
 
 public interface ItemService {
@@ -23,4 +24,6 @@ public interface ItemService {
             String keyword,
             Pageable pageable
     );
+
+    ItemDetailResponse getPublicItemDetail(Long itemId);
 }

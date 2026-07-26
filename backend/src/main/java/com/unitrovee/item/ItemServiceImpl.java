@@ -24,6 +24,12 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.unitrovee.item.domain.ItemImage;
+import com.unitrovee.item.dto.ItemDetailResponse;
+import com.unitrovee.storage.StorageService;
+
+import java.util.List;
+
 import java.math.BigDecimal;
 
 @Service
@@ -35,6 +41,7 @@ public class ItemServiceImpl implements ItemService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final ItemMapper itemMapper;
+    private final StorageService storageService;
 
     @Override
     @Transactional
@@ -170,5 +177,18 @@ public class ItemServiceImpl implements ItemService {
         ).map(itemMapper::toListResponse);
 
         return PageResponse.from(items);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ItemDetailResponse getPublicItemDetail(Long itemId) {
+        Item item = itemRepository.findByIdAndStatus(itemId, ItemStatus.AVAILABLE).orElseThrow(() -> new ResourceNotFoundException("Item not found"));
+
+        List<ItemDetailResponse.ImageResponse> images = itemImageRepository
+                .findByItemIdOrderBySortOrderAsc(itemId)
+                .stream()
+                .map(image -> itemMapper.toImageResponse(image, storageService.getUrl(image.getStorageKey()))).toList();
+
+        return itemMapper.toDetailResponse(item, images);
     }
 }

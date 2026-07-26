@@ -7,6 +7,7 @@ import com.unitrovee.item.dto.ItemCreateRequest;
 import com.unitrovee.item.dto.ItemCreateResponse;
 import com.unitrovee.item.dto.ItemListResponse;
 import com.unitrovee.item.dto.ItemUpdateRequest;
+import com.unitrovee.item.dto.ItemDetailResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -73,5 +74,10 @@ public class ItemController {
     ) {
         itemService.deleteItem(itemId, authentication.getName());
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{itemId}")
+    public ApiResponse<ItemDetailResponse> getItemDetail(@PathVariable Long itemId) {
+        return ApiResponse.ok(itemService.getPublicItemDetail(itemId));
     }
 }
