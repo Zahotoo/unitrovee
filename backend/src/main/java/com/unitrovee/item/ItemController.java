@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/items")
@@ -79,5 +81,19 @@ public class ItemController {
     @GetMapping("/{itemId}")
     public ApiResponse<ItemDetailResponse> getItemDetail(@PathVariable Long itemId) {
         return ApiResponse.ok(itemService.getPublicItemDetail(itemId));
+    }
+
+    @PostMapping(
+            value = "/{itemId}/images",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ResponseEntity<ApiResponse<ItemDetailResponse.ImageResponse>> uploadImage(
+            @PathVariable Long itemId,
+            Authentication authentication,
+            @RequestParam("image") MultipartFile image
+    ) {
+        ItemDetailResponse.ImageResponse response = itemService.uploadImage(itemId, authentication.getName(), image);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(response, "Item image uploaded"));
     }
 }
