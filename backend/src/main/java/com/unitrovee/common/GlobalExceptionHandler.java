@@ -4,6 +4,7 @@ import com.unitrovee.auth.exception.EmailAlreadyExistsException;
 import com.unitrovee.auth.exception.UnsupportedSchoolEmailException;
 import com.unitrovee.common.exception.ResourceNotFoundException;
 import com.unitrovee.auth.exception.InvalidVerificationCodeException;
+import com.unitrovee.item.exception.InvalidItemImageException;
 import com.unitrovee.item.exception.ItemNotEditableException;
 import com.unitrovee.item.exception.InvalidItemUpdateException;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +16,9 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @Slf4j
 @RestControllerAdvice
@@ -24,6 +28,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFound(ResourceNotFoundException ex) {
         ErrorResponse body = ErrorResponse.of("RESOURCE_NOT_FOUND", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponse> handleMissingStaticResource(NoResourceFoundException ex) {
+        ErrorResponse body = ErrorResponse.of(
+                "RESOURCE_NOT_FOUND",
+                "Resource not found"
+        );
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
     }
 
@@ -97,6 +111,27 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidItemUpdateException.class)
     public ResponseEntity<ErrorResponse> handleInvalidItemUpdate(InvalidItemUpdateException ex) {
         ErrorResponse body = ErrorResponse.of("VALIDATION_ERROR", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+
+    @ExceptionHandler(InvalidItemImageException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidItemImage(InvalidItemImageException ex) {
+        ErrorResponse body = ErrorResponse.of("VALIDATION_ERROR", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponse> handleMaxUploadSizeExceeded(MaxUploadSizeExceededException ex) {
+        ErrorResponse body = ErrorResponse.of("VALIDATION_ERROR", "Image size must not exceed 5 MB");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public ResponseEntity<ErrorResponse> handleMissingRequestPart(MissingServletRequestPartException ex) {
+        ErrorResponse body = ErrorResponse.of("VALIDATION_ERROR", "An image file is required");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 

@@ -30,6 +30,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
+import com.unitrovee.storage.StorageService;
+import org.junit.jupiter.api.AfterEach;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.transaction.annotation.Propagation;
+
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+
 @AutoConfigureMockMvc
 @Transactional
 public class ItemDeleteIntegrationTest extends AbstractIntegrationTest {
@@ -43,6 +55,14 @@ public class ItemDeleteIntegrationTest extends AbstractIntegrationTest {
     @Autowired private JwtService jwtService;
     @Autowired private EntityManager entityManager;
     @Autowired private ItemImageRepository itemImageRepository;
+    @Autowired private StorageService storageService;
+
+    private final List<String> storedKeys = new ArrayList<>();
+
+    @AfterEach
+    void deleteStoredFiles() {
+        storedKeys.forEach(storageService::delete);
+    }
 
     @Test
     void deleteItem_permanentlyDeletesDraftItemOwnedByAuthenticatedUser() throws Exception {
@@ -212,6 +232,95 @@ public class ItemDeleteIntegrationTest extends AbstractIntegrationTest {
         entityManager.clear();
         Item unchangedItem = itemRepository.findById(item.getId()).orElseThrow();
         assertThat(unchangedItem.getStatus()).isEqualTo(itemStatus);
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void deleteItem_deletesStoredFileWithDraftItem() throws Exception {
+        School school = schoolRepository.findByEmailDomain("ucdconnect.ie").orElseThrow();
+        Category category = categoryRepository.findByActiveTrueOrderByNameAsc().getFirst();
+
+        User owner = createVerifiedStudent(
+                "delete-stored-file-owner@ucdconnect.ie",
+                "Stored File Owner",
+                school
+        );
+        Item item = createDraftItem(owner, school, category);
+
+        byte[] imageBytes = "stored-image-bytes".getBytes();
+        MockMultipartFile file = new MockMultipartFile(
+                "image",
+                "delete-me.png",
+                MediaType.IMAGE_PNG_VALUE,
+                imageBytes
+        );
+
+        String storageKey = storageService.store(file);
+        storedKeys.add(storageKey);
+
+        ItemImage image = new ItemImage();
+        image.setItem(item);
+        image.setStorageKey(storageKey);
+        image.setSortOrder(0);
+        itemImageRepository.saveAndFlush(image);
+
+        String filePath = URI.create(storageService.getUrl(storageKey)).getPath();
+
+        mockMvc.perform(get(filePath))
+                .andExpect(status().isOk());
+
+        String accessToken = jwtService.generateToken(
+                userDetailsService.loadUserByUsername(owner.getEmail())
+        );
+
+        mockMvc.perform(delete("/api/items/{itemId}", item.getId())
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get(filePath))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void deleteItem_keepsStoredFileUntilTransactionCommits() throws Exception {
+        School school = schoolRepository.findByEmailDomain("ucdconnect.ie").orElseThrow();
+        Category category = categoryRepository.findByActiveTrueOrderByNameAsc().getFirst();
+
+        User owner = createVerifiedStudent(
+                "delete-rollback-owner@ucdconnect.ie",
+                "Rollback Delete Owner",
+                school
+        );
+        Item item = createDraftItem(owner, school, category);
+
+        MockMultipartFile file = new MockMultipartFile(
+                "image",
+                "keep-until-commit.png",
+                MediaType.IMAGE_PNG_VALUE,
+                "stored-image-bytes".getBytes()
+        );
+
+        String storageKey = storageService.store(file);
+        storedKeys.add(storageKey);
+
+        ItemImage image = new ItemImage();
+        image.setItem(item);
+        image.setStorageKey(storageKey);
+        image.setSortOrder(0);
+        itemImageRepository.saveAndFlush(image);
+
+        String filePath = URI.create(storageService.getUrl(storageKey)).getPath();
+
+        String accessToken = jwtService.generateToken(
+                userDetailsService.loadUserByUsername(owner.getEmail())
+        );
+
+        mockMvc.perform(delete("/api/items/{itemId}", item.getId())
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get(filePath))
+                .andExpect(status().isOk());
     }
 
     private User createVerifiedStudent(String email, String displayName, School school) {
