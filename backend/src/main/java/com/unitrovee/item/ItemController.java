@@ -3,11 +3,7 @@ package com.unitrovee.item;
 import com.unitrovee.common.ApiResponse;
 import com.unitrovee.common.PageResponse;
 import com.unitrovee.item.domain.ExchangeType;
-import com.unitrovee.item.dto.ItemCreateRequest;
-import com.unitrovee.item.dto.ItemCreateResponse;
-import com.unitrovee.item.dto.ItemListResponse;
-import com.unitrovee.item.dto.ItemUpdateRequest;
-import com.unitrovee.item.dto.ItemDetailResponse;
+import com.unitrovee.item.dto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -75,6 +71,16 @@ public class ItemController {
             Authentication authentication
     ) {
         itemService.deleteItem(itemId, authentication.getName());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{itemId}/lifecycle")
+    public ResponseEntity<Void> changeLifecycle(
+            @PathVariable Long itemId,
+            Authentication authentication,
+            @Valid @RequestBody ItemLifecycleRequest request
+    ) {
+        itemService.changeLifecycle(itemId, authentication.getName(), request);
         return ResponseEntity.noContent().build();
     }
 

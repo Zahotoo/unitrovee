@@ -1,12 +1,8 @@
 package com.unitrovee.item;
 
-import com.unitrovee.item.dto.ItemCreateRequest;
-import com.unitrovee.item.dto.ItemCreateResponse;
-import com.unitrovee.item.dto.ItemUpdateRequest;
+import com.unitrovee.item.dto.*;
 import com.unitrovee.common.PageResponse;
 import com.unitrovee.item.domain.ExchangeType;
-import com.unitrovee.item.dto.ItemListResponse;
-import com.unitrovee.item.dto.ItemDetailResponse;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -17,6 +13,8 @@ public interface ItemService {
     void updateItem(Long itemId, String authenticatedEmail, ItemUpdateRequest request);
 
     void deleteItem(Long itemId, String authenticatedEmail);
+
+    void changeLifecycle(Long itemId, String authenticatedEmail, ItemLifecycleRequest request);
 
     PageResponse<ItemListResponse> getPublicItems(
             Long schoolId,
