@@ -6,17 +6,14 @@ import com.unitrovee.common.exception.ResourceNotFoundException;
 import com.unitrovee.item.domain.ExchangeType;
 import com.unitrovee.item.domain.Item;
 import com.unitrovee.item.domain.ItemStatus;
-import com.unitrovee.item.dto.ItemCreateRequest;
-import com.unitrovee.item.dto.ItemCreateResponse;
+import com.unitrovee.item.dto.*;
 import com.unitrovee.item.mapper.ItemMapper;
 import com.unitrovee.user.UserRepository;
 import com.unitrovee.user.domain.Role;
 import com.unitrovee.user.domain.User;
-import com.unitrovee.item.dto.ItemUpdateRequest;
 import com.unitrovee.item.exception.ItemNotEditableException;
 import com.unitrovee.item.exception.InvalidItemUpdateException;
 import com.unitrovee.common.PageResponse;
-import com.unitrovee.item.dto.ItemListResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.unitrovee.item.domain.ItemImage;
 import org.springframework.web.multipart.MultipartFile;
-import com.unitrovee.item.dto.ItemDetailResponse;
 import com.unitrovee.storage.StorageService;
 import com.unitrovee.item.exception.InvalidItemImageException;
 import java.util.Set;
@@ -179,12 +175,30 @@ public class ItemServiceImpl implements ItemService {
             return;
         }
 
-        if (item.getStatus() == ItemStatus.AVAILABLE) {
+        throw new ItemNotEditableException("Only DRAFT items can be deleted");
+    }
+
+    @Override
+    @Transactional
+    public void changeLifecycle(Long itemId, String authenticatedEmail, ItemLifecycleRequest request) {
+        // locks this item row so lifecycle changes cannot interleave with upload/delete
+        Item item = itemRepository.findByIdForUpdate(itemId).orElseThrow(() -> new ResourceNotFoundException("Item not found"));
+
+        if (!item.getOwner().getEmail().equals(authenticatedEmail)) {
+            throw new AccessDeniedException("Only the item owner may change its lifecycle");
+        }
+
+        if (request.action() == ItemLifecycleAction.PUBLISH && item.getStatus() == ItemStatus.DRAFT) {
+            item.setStatus(ItemStatus.AVAILABLE);
+            return;
+        }
+
+        if (request.action() == ItemLifecycleAction.ARCHIVE && item.getStatus() == ItemStatus.AVAILABLE) {
             item.setStatus(ItemStatus.ARCHIVED);
             return;
         }
 
-        throw new ItemNotEditableException("Only DRAFT items can be deleted and AVAILABLE items can be archived");
+        throw new ItemNotEditableException("This lifecycle action is not allowed for the item's current status");
     }
 
     @Override

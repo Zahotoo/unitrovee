@@ -89,13 +89,13 @@ public class ItemDeleteIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void deleteItem_archiveAvailableItemOwnedByAuthenticatedUser() throws Exception {
+    void deleteItem_rejectsAvailableItemOwnedByAuthenticatedUser() throws Exception {
         School school = schoolRepository.findByEmailDomain("ucdconnect.ie").orElseThrow();
         Category category = categoryRepository.findByActiveTrueOrderByNameAsc().getFirst();
 
         User owner = createVerifiedStudent(
-                "archive-available-owner@ucdconnect.ie",
-                "Available Item Owner",
+                "available-delete-owner@ucdconnect.ie",
+                "Available Delete Owner",
                 school
         );
         Item item = createDraftItem(owner, school, category);
@@ -105,14 +105,14 @@ public class ItemDeleteIntegrationTest extends AbstractIntegrationTest {
         String accessToken = jwtService.generateToken(userDetailsService.loadUserByUsername(owner.getEmail()));
 
         mockMvc.perform(delete("/api/items/{itemId}", item.getId())
-                        .header("Authorization", "Bearer " + accessToken))
-                .andExpect(status().isNoContent());
+                .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error.code").value("ITEM_NOT_EDITABLE"));
 
-        entityManager.flush();
         entityManager.clear();
 
-        Item archivedItem = itemRepository.findById(item.getId()).orElseThrow();
-        assertThat(archivedItem.getStatus()).isEqualTo(ItemStatus.ARCHIVED);
+        Item unchangedItem = itemRepository.findById(item.getId()).orElseThrow();
+        assertThat(unchangedItem.getStatus()).isEqualTo(ItemStatus.AVAILABLE);
     }
 
     @Test
