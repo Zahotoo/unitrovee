@@ -16,6 +16,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import org.hibernate.SessionFactory;
+import org.hibernate.stat.Statistics;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 import jakarta.persistence.EntityManager;
 
@@ -23,6 +27,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -252,6 +257,85 @@ public class ItemListIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.data.content[0].id").value(newestItem.getId()))
                 .andExpect(jsonPath("$.data.content[1].id").value(middleItem.getId()))
                 .andExpect(jsonPath("$.data.content[2].id").value(oldestItem.getId()));
+    }
+
+    @Test
+    void listItems_fetchesSchoolAndCategoryWithoutNPlusOneQueries() throws Exception {
+        School firstSchool = schoolRepository.findByEmailDomain("ucdconnect.ie").orElseThrow();
+
+        School secondSchool = new School();
+        secondSchool.setName("N Plus One Test University");
+        secondSchool.setShortName("NPTU");
+        secondSchool.setEmailDomain("nplusone-test.ie");
+        secondSchool.setActive(true);
+        schoolRepository.saveAndFlush(secondSchool);
+
+        List<Category> activeCategories = categoryRepository.findByActiveTrueOrderByNameAsc();
+        Category firstCategory = activeCategories.getFirst();
+        Category secondCategory = activeCategories.stream()
+                .filter(category -> !category.getId().equals(firstCategory.getId()))
+                .findFirst()
+                .orElseThrow();
+
+        User firstOwner = createVerifiedStudent(
+                "nplusone-first-owner@ucdconnect.ie",
+                firstSchool
+        );
+        User secondOwner = createVerifiedStudent(
+                "nplusone-second-owner@nplusone-test.ie",
+                secondSchool
+        );
+
+        createItem(
+                firstOwner,
+                firstSchool,
+                firstCategory,
+                "First N Plus One Item",
+                ItemStatus.AVAILABLE
+        );
+        createItem(
+                firstOwner,
+                firstSchool,
+                secondCategory,
+                "Second N Plus One Item",
+                ItemStatus.AVAILABLE
+        );
+        createItem(
+                secondOwner,
+                secondSchool,
+                firstCategory,
+                "Third N Plus One Item",
+                ItemStatus.AVAILABLE
+        );
+        createItem(
+                secondOwner,
+                secondSchool,
+                secondCategory,
+                "Fourth N Plus One Item",
+                ItemStatus.AVAILABLE
+        );
+
+        entityManager.flush();
+        entityManager.clear();
+
+        Statistics statistics = entityManager.getEntityManagerFactory()
+                .unwrap(SessionFactory.class)
+                .getStatistics();
+
+        boolean statisticsWereEnabled = statistics.isStatisticsEnabled();
+        statistics.setStatisticsEnabled(true);
+        statistics.clear();
+
+        try {
+            mockMvc.perform(get("/api/items"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.content.length()").value(4));
+
+            assertThat(statistics.getPrepareStatementCount()).isLessThanOrEqualTo(2);
+        } finally {
+            statistics.clear();
+            statistics.setStatisticsEnabled(statisticsWereEnabled);
+        }
     }
 
     private User createVerifiedStudent(String email, School school) {
