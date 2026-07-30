@@ -3,6 +3,8 @@ import reactLogo from '../assets/react.svg'
 import viteLogo from '../assets/vite.svg'
 import heroImg from '../assets/hero.png'
 import './App.css'
+import { ArrowRight } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -28,6 +30,10 @@ function App() {
         >
           Count is {count}
         </button>
+        <Button type="button" className="mt-2">
+          Try shadcn Button
+          <ArrowRight aria-hidden="true" />
+        </Button>
       </section>
 
       <div className="ticks"></div>
