@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router-dom'
 
 import App from '@/app/App'
 import { PagePlaceholder } from '@/pages/PagePlaceholder'
+import { QuerySample } from '@/pages/QuerySample'
 
 const placeholder = (title: string, description: string) => (
     <PagePlaceholder title={title} description={description} />
@@ -18,6 +19,10 @@ export const router = createBrowserRouter([
                     'Find more. Waste less.',
                     'Buy, sell, swap, or give away items with verified students.',
                 ),
+            },
+            {
+                path: 'query-sample',
+                element: <QuerySample />,
             },
             {
                 path: 'login',
