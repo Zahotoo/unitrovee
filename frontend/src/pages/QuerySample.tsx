@@ -1,25 +1,40 @@
 import { useQuery } from '@tanstack/react-query'
 
-type SamplePost = {
-    id: number
-    title: string
+import { apiClient } from '@/api/client'
+
+type ApiResponse<T> = {
+    data: T
+    message: string
 }
 
-async function fetchSamplePost(): Promise<SamplePost> {
-    const response = await fetch(
-        'https://jsonplaceholder.typicode.com/posts/1',
+type PageResponse<T> = {
+    content: T[]
+    page: number
+    size: number
+    totalElements: number
+    totalPages: number
+}
+
+type School = {
+    id: number
+    name: string
+    shortName: string
+    emailDomain: string
+    city: string
+}
+
+async function fetchSchools(): Promise<School[]> {
+    const response = await apiClient<ApiResponse<PageResponse<School>>>(
+        '/schools?size=5',
     )
 
-    if (!response.ok) {
-        throw new Error('Unable to load the sample post.')
-    }
-    return response.json()
+    return response.data.content
 }
 
 export function QuerySample() {
     const { data, isError, isPending } = useQuery({
-        queryKey: ['sample-post'],
-        queryFn: fetchSamplePost,
+        queryKey: ['schools', 'sample'],
+        queryFn: fetchSchools,
         retry: false,
     })
 
@@ -34,22 +49,39 @@ export function QuerySample() {
                     TanStack Query sample
                 </h1>
                 <p className="text-muted-foreground">
-                    This temporary page proves a query can load server data
+                    This page loads real school data from the Unitrovee API.
                 </p>
             </div>
 
-            {isPending && <p role="status">Loading sample post...</p>}
+            {isPending && <p role="status">Loading schools...</p>}
 
             {isError && (
                 <p role="alert" className="text-destructive">
-                    Unable to load the sample post. Please try again.
+                    Unable to load schools. Make sure the backend is running.
                 </p>
             )}
 
             {data && (
                 <article className="w-full rounded-lg border bg-card p-6 text-left">
-                    <p className="text-sm text-muted-foreground">Loaded post #{data.id}</p>
-                    <h2 className="mt-2 text-xl font-semibold">{data.title}</h2>
+                    <p className="text-sm text-muted-foreground">
+                        Loaded {data.length} schools from the Unitrovee API
+                    </p>
+
+                    {data.length === 0 ? (
+                        <p className="mt-3">No active schools were returned.</p>
+                    ) : (
+                        <ul className="mt-3 space-y-2">
+                            {data.map((school) => (
+                                <li key={school.id}>
+                                    <span className="font-medium">{school.name}</span>
+                                    <span className="text-muted-foreground">
+                    {' '}
+                                        — {school.city} · @{school.emailDomain}
+                  </span>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
                 </article>
             )}
         </section>
