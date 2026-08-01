@@ -3,6 +3,7 @@ import { createBrowserRouter } from 'react-router-dom'
 import App from '@/app/App'
 import { PagePlaceholder } from '@/pages/PagePlaceholder'
 import { QuerySample } from '@/pages/QuerySample'
+import { AuthSample } from '@/pages/AuthSample'
 
 const placeholder = (title: string, description: string) => (
     <PagePlaceholder title={title} description={description} />
@@ -23,6 +24,10 @@ export const router = createBrowserRouter([
             {
                 path: 'query-sample',
                 element: <QuerySample />,
+            },
+            {
+                path: 'auth-sample',
+                element: <AuthSample />,
             },
             {
                 path: 'login',
