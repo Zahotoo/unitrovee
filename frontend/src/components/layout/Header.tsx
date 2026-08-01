@@ -1,4 +1,5 @@
 import { Link, NavLink } from 'react-router-dom'
+import { Button } from '@/components/ui/button'
 
 import { cn } from '@/lib/utils'
 
@@ -39,12 +40,13 @@ export function Header() {
                     >
                         Log in
                     </Link>
-                    <Link
-                        to="/register"
-                        className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/80"
+                    <Button
+                        render={<Link to="/register" />}
+                        nativeButton={false}
+                        className="h-11 px-4"
                     >
                         Register
-                    </Link>
+                    </Button>
                 </div>
             </div>
         </header>
