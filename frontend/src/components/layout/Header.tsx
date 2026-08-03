@@ -10,8 +10,8 @@ const navigation = [
 
 export function Header() {
     return (
-        <header className="border-b">
-            <div className="mx-auto flex min-h-16 max-w-6xl items-center justify-between gap-4 px-6">
+        <header className="border-b bg-card">
+            <div className="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-4 px-6">
                 <Link to="/" className="text-lg font-semibold tracking-tight">
                     unitrovee
                 </Link>

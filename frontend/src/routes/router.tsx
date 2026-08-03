@@ -5,6 +5,7 @@ import { AuthSample } from '@/pages/AuthSample'
 import { PagePlaceholder } from '@/pages/PagePlaceholder'
 import { QuerySample } from '@/pages/QuerySample'
 import { ProtectedRoute } from '@/routes/ProtectedRoute'
+import { RegisterPage } from '@/pages/RegisterPage'
 
 const placeholder = (title: string, description: string) => (
     <PagePlaceholder title={title} description={description} />
@@ -36,10 +37,7 @@ export const router = createBrowserRouter([
             },
             {
                 path: 'register',
-                element: placeholder(
-                    'Create an account',
-                    'Join the student marketplace for your university.',
-                ),
+                element: <RegisterPage />
             },
             {
                 path: 'items',
