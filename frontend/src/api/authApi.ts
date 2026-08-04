@@ -27,10 +27,32 @@ export type RegisterResponse = {
     school: SchoolResponse
 }
 
+export type VerifyEmailCredentials = {
+    email: string
+    code: string
+}
+
+export type VerifyEmailResponse = {
+    email: string
+    emailVerified: boolean
+}
+
 export function registerAccount(
     credentials: RegisterCredentials,
 ): Promise<ApiResponse<RegisterResponse>> {
     return apiClient<ApiResponse<RegisterResponse>>('/auth/register', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(credentials),
+    })
+}
+
+export function verifyEmail(
+    credentials: VerifyEmailCredentials,
+): Promise<ApiResponse<VerifyEmailResponse>> {
+    return apiClient<ApiResponse<VerifyEmailResponse>>('/auth/verify', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
