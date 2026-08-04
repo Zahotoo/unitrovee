@@ -79,18 +79,19 @@ export function RegisterPage() {
 
     return (
         <section className="bg-background px-4 py-12 sm:px-6 md:py-20">
-            <div className="mx-auto w-full max-w-md rounded-lg border bg-card p-6 sm:p-8">
-                <div className="mb-8 space-y-2">
-                    <p className="text-sm font-semibold tracking-wide text-primary uppercase">
+            <div className="relative mx-auto w-full max-w-md overflow-hidden rounded-2xl border bg-card p-6 shadow-sm sm:p-10">
+                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary to-secondary" />
+                    <p className="mb-6 text-center text-2xl font-bold tracking-tight text-primary">
                         unitrovee
                     </p>
-                    <h1 className="text-3xl font-semibold tracking-tight">
-                        Create your account
-                    </h1>
-                    <p className="text-muted-foreground">
-                        Use your university email and we’ll match it to your school automatically.
-                    </p>
-                </div>
+                    <div className="mb-8 space-y-2">
+                        <h1 className="text-3xl font-semibold tracking-tight">
+                            Create your account
+                        </h1>
+                        <p className="text-muted-foreground">
+                            Use your university email and we’ll match it to your school automatically.
+                        </p>
+                    </div>
                 {serverErrorMessage && (
                     <div
                         role="alert"
@@ -179,7 +180,7 @@ export function RegisterPage() {
 
                     <Button
                         type="submit"
-                        variant="secondary"
+                        variant="default"
                         className="h-11 w-full"
                         disabled={isSubmitting}
                     >

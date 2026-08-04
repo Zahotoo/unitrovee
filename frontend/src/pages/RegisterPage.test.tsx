@@ -473,4 +473,18 @@ describe('RegisterPage', () => {
             )
         })
     })
+
+    test('uses the primary blue style for the Create account button', async () => {
+        await router.navigate('/register')
+
+        render(<RouterProvider router={router} />)
+
+        const submitButton = screen.getByRole('button', {
+            name: 'Create account',
+        })
+
+        expect(submitButton).toHaveClass('bg-primary')
+        expect(submitButton).toHaveClass('text-primary-foreground')
+        expect(submitButton).not.toHaveClass('bg-secondary')
+    })
 })
