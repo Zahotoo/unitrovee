@@ -6,6 +6,7 @@ import { PagePlaceholder } from '@/pages/PagePlaceholder'
 import { QuerySample } from '@/pages/QuerySample'
 import { ProtectedRoute } from '@/routes/ProtectedRoute'
 import { RegisterPage } from '@/pages/RegisterPage'
+import { VerifyEmailPage } from '@/pages/VerifyEmailPage'
 
 const placeholder = (title: string, description: string) => (
     <PagePlaceholder title={title} description={description} />
@@ -38,6 +39,10 @@ export const router = createBrowserRouter([
             {
                 path: 'register',
                 element: <RegisterPage />
+            },
+            {
+                path: 'verify',
+                element: <VerifyEmailPage />
             },
             {
                 path: 'items',
