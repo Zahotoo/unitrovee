@@ -1,9 +1,6 @@
 package com.unitrovee.auth;
 
-import com.unitrovee.auth.dto.LoginRequest;
-import com.unitrovee.auth.dto.LoginResponse;
-import com.unitrovee.auth.dto.RegisterRequest;
-import com.unitrovee.auth.dto.RegisterResponse;
+import com.unitrovee.auth.dto.*;
 import com.unitrovee.auth.exception.EmailAlreadyExistsException;
 import com.unitrovee.auth.exception.UnsupportedSchoolEmailException;
 import com.unitrovee.auth.mapper.AuthMapper;
@@ -13,9 +10,7 @@ import com.unitrovee.security.JwtService;
 import com.unitrovee.user.UserRepository;
 import com.unitrovee.user.domain.Role;
 import com.unitrovee.user.domain.User;
-import com.unitrovee.auth.dto.VerifyEmailRequest;
 import com.unitrovee.auth.exception.InvalidVerificationCodeException;
-import com.unitrovee.auth.dto.VerifyEmailResponse;
 import com.unitrovee.auth.verification.EmailVerificationCode;
 import com.unitrovee.auth.verification.EmailVerificationCodeRepository;
 import com.unitrovee.auth.verification.VerificationCodeHasher;
@@ -49,6 +44,7 @@ public class AuthServiceImpl implements AuthService {
     private final EmailVerificationCodeRepository verificationCodeRepository;
     private final VerificationCodeGenerator verificationCodeGenerator;
     private final VerificationEmailSender verificationEmailSender;
+    private static final int RESEND_COOLDOWN_SECONDS = 60;
 
     @Override
     @Transactional
@@ -113,7 +109,7 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public VerifyEmailResponse verifyEmail(VerifyEmailRequest request) {
         String                  email               = request.email().trim().toLowerCase(Locale.ROOT);
-        User                    user                = userRepository.findByEmail(email).orElseThrow(() -> new InvalidVerificationCodeException("Verification code is invalid or expired"));
+        User                    user                = userRepository.findByEmailForUpdate(email).orElseThrow(() -> new InvalidVerificationCodeException("Verification code is invalid or expired"));
         EmailVerificationCode   verificationCode    = verificationCodeRepository.findByUserId(user.getId()).orElseThrow(() -> new InvalidVerificationCodeException("Verification code is invalid or expired"));
         boolean                 isExpired           = !verificationCode.getExpiresAt().isAfter(Instant.now());
         String                  requestCodeHash     = VerificationCodeHasher.hash(request.code());
@@ -132,5 +128,38 @@ public class AuthServiceImpl implements AuthService {
         verificationCodeRepository.delete(verificationCode);
 
         return new VerifyEmailResponse(user.getEmail(), true);
+    }
+
+    @Override
+    @Transactional
+    public ResendVerificationResponse resendVerificationCode(ResendVerificationRequest request) {
+        String email = request.email().trim().toLowerCase(Locale.ROOT);
+        User user = userRepository.findByEmailForUpdate(email).orElse(null);
+
+        if (user == null || user.isEmailVerified()) {
+            return new ResendVerificationResponse(RESEND_COOLDOWN_SECONDS);
+        }
+
+        EmailVerificationCode verificationCode = verificationCodeRepository.findByUserId(user.getId()).orElse(null);
+
+        if (verificationCode != null) {
+            Instant cooldownEndsAt = verificationCode.getUpdatedAt().plusSeconds(RESEND_COOLDOWN_SECONDS);
+            if (cooldownEndsAt.isAfter(Instant.now())) {
+                // returns the same generic response without sending another email
+                // this prevents email/account-state enumeration
+                return new ResendVerificationResponse(RESEND_COOLDOWN_SECONDS);
+            }
+        } else {
+            verificationCode = new EmailVerificationCode();
+            verificationCode.setUser(user);
+        }
+
+        String plainCode = verificationCodeGenerator.generate();
+
+        verificationCode.setCodeHash(VerificationCodeHasher.hash(plainCode));
+        verificationCode.setExpiresAt(Instant.now().plus(Duration.ofMinutes(15)));
+        verificationCodeRepository.save(verificationCode);
+        verificationEmailSender.sendVerificationCode(user.getEmail(), plainCode);
+        return new ResendVerificationResponse(RESEND_COOLDOWN_SECONDS);
     }
 }

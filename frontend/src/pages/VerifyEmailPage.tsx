@@ -1,7 +1,7 @@
 import { ArrowLeft, ArrowRight, Mail } from 'lucide-react'
-import { type FormEvent, useRef, useState } from 'react'
+import { type FormEvent, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { verifyEmail } from '@/api/authApi'
+import { resendVerificationCode, verifyEmail } from '@/api/authApi'
 import { ApiError } from '@/api/client'
 import { verifyEmailSchema } from '@/features/auth/verifyEmailSchema'
 
@@ -31,6 +31,9 @@ export function VerifyEmailPage() {
         null,
     )
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [isResending, setIsResending] = useState(false)
+    const [resendMessage, setResendMessage] = useState<string | null>(null)
+    const [resendCooldownSeconds, setResendCooldownSeconds] = useState(0)
     const inputRefs = useRef<Array<HTMLInputElement | null>>([])
 
     function handleDigitChange(index: number, value: string) {
@@ -71,6 +74,34 @@ export function VerifyEmailPage() {
 
         const lastFilledIndex = pastedDigits.length - 1
         inputRefs.current[lastFilledIndex]?.focus()
+    }
+
+    useEffect(() => {
+        if (resendCooldownSeconds === 0) {
+            return
+        }
+
+        const timeoutId = window.setTimeout(() => {
+            setResendCooldownSeconds((seconds) => seconds - 1)
+        }, 1_000)
+
+        return () => window.clearTimeout(timeoutId)
+    }, [resendCooldownSeconds])
+
+    async function handleResend() {
+        setResendMessage(null)
+        setIsResending(true)
+
+        try {
+            const response = await resendVerificationCode({ email })
+
+            setResendCooldownSeconds(response.data.retryAfterSeconds)
+            setResendMessage('Check your inbox - your code may already be there.')
+        } catch {
+            setResendMessage('Unable to resend the code. Please try again.')
+        } finally {
+            setIsResending(false)
+        }
     }
 
     async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -226,7 +257,31 @@ export function VerifyEmailPage() {
                 </form>
 
                 <div className="mt-6 border-t pt-6 text-center text-sm text-muted-foreground">
-                    Didn&apos;t receive the code? Check your spam folder.
+                    <div className="flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1">
+                        <span>Didn&apos;t receive the code?</span>
+
+                        <button
+                            type="button"
+                            disabled={isResending || resendCooldownSeconds > 0}
+                            onClick={handleResend}
+                            className="font-semibold text-primary transition-colors hover:text-primary/80 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                            {isResending
+                                ? 'Resending...'
+                                : resendCooldownSeconds > 0
+                                    ? `Resend code in ${resendCooldownSeconds}s`
+                                    : 'Resend'
+                            }
+                        </button>
+                    </div>
+                    {resendMessage && (
+                        <p
+                            role="status"
+                            className="mt-3 text-center text-sm text-muted-foreground"
+                        >
+                            {resendMessage}
+                        </p>
+                    )}
                     <Link
                         to="/login"
                         className="mt-4 flex items-center justify-center gap-1 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
