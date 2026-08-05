@@ -37,6 +37,14 @@ export type VerifyEmailResponse = {
     emailVerified: boolean
 }
 
+export type ResendVerificationCredentials = {
+    email: string
+}
+
+export type ResendVerificationResponse = {
+    retryAfterSeconds: number
+}
+
 export function registerAccount(
     credentials: RegisterCredentials,
 ): Promise<ApiResponse<RegisterResponse>> {
@@ -59,4 +67,19 @@ export function verifyEmail(
         },
         body: JSON.stringify(credentials),
     })
+}
+
+export function resendVerificationCode(
+    credentials: ResendVerificationCredentials,
+): Promise<ApiResponse<ResendVerificationResponse>> {
+    return apiClient<ApiResponse<ResendVerificationResponse>>(
+        '/auth/resend-verification',
+        {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(credentials),
+        },
+    )
 }

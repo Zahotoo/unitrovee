@@ -178,4 +178,204 @@ public class EmailVerificationIntegrationTest extends AbstractIntegrationTest {
         assertThat(unchangedUser.isEmailVerified()).isFalse();
         assertThat(verificationCodeRepository.findByUserId(user.getId())).isPresent();
     }
+
+    @Test
+    void resend_createsANewCodeForAnUnverifiedUserWithoutAnActiveCode() throws Exception {
+        String email = "resend-student@ucdconnect.ie";
+
+        School school = schoolRepository.findByEmailDomain("ucdconnect.ie").orElseThrow();
+
+        User user = new User();
+        user.setEmail(email);
+        user.setPasswordHash("$2a$dummy");
+        user.setDisplayName("Resend Student");
+        user.setSchool(school);
+        user.setRole(Role.STUDENT);
+        user.setEmailVerified(false);
+        user.setReputationScore(0);
+        userRepository.saveAndFlush(user);
+
+        Instant requestedAt = Instant.now();
+
+        mockMvc.perform(post("/api/auth/resend-verification")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                      "email": "%s"
+                    }
+                    """.formatted(email)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.retryAfterSeconds").value(60));
+
+        EmailVerificationCode verificationCode = verificationCodeRepository.findByUserId(user.getId()).orElseThrow();
+
+        assertThat(verificationCode.getCodeHash()).hasSize(64);
+        assertThat(verificationCode.getExpiresAt()).isAfter(requestedAt.plus(Duration.ofMinutes(14)));
+    }
+
+    @Test
+    void resend_hidesTheCooldownAndDoesNotReplaceTheCode() throws Exception {
+        String email = "cooldown-student@ucdconnect.ie";
+
+        School school = schoolRepository.findByEmailDomain("ucdconnect.ie")
+                .orElseThrow();
+
+        User user = new User();
+        user.setEmail(email);
+        user.setPasswordHash("$2a$dummy");
+        user.setDisplayName("Cooldown Student");
+        user.setSchool(school);
+        user.setRole(Role.STUDENT);
+        user.setEmailVerified(false);
+        user.setReputationScore(0);
+        userRepository.saveAndFlush(user);
+
+        EmailVerificationCode verificationCode = new EmailVerificationCode();
+        verificationCode.setUser(user);
+        verificationCode.setCodeHash(
+                VerificationCodeHasher.hash("123456")
+        );
+        verificationCode.setExpiresAt(
+                Instant.now().plus(Duration.ofMinutes(15))
+        );
+        verificationCodeRepository.saveAndFlush(verificationCode);
+
+        String originalHash = verificationCode.getCodeHash();
+
+        mockMvc.perform(post("/api/auth/resend-verification")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                        {
+                          "email": "%s"
+                        }
+                        """.formatted(email)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.retryAfterSeconds").value(60))
+                .andExpect(jsonPath("$.message").value(
+                        "If your account is eligible, a verification code has been sent"
+                ));
+
+        entityManager.clear();
+
+        EmailVerificationCode unchangedCode = verificationCodeRepository
+                .findByUserId(user.getId())
+                .orElseThrow();
+
+        assertThat(unchangedCode.getCodeHash()).isEqualTo(originalHash);
+    }
+
+    @Test
+    void resend_replacesTheOldCodeAfterTheCooldown() throws Exception {
+        String email = "replace-code-student@ucdconnect.ie";
+        String oldCode = "123456";
+
+        School school = schoolRepository.findByEmailDomain("ucdconnect.ie")
+                .orElseThrow();
+
+        User user = new User();
+        user.setEmail(email);
+        user.setPasswordHash("$2a$dummy");
+        user.setDisplayName("Replace Code Student");
+        user.setSchool(school);
+        user.setRole(Role.STUDENT);
+        user.setEmailVerified(false);
+        user.setReputationScore(0);
+        userRepository.saveAndFlush(user);
+
+        EmailVerificationCode verificationCode = new EmailVerificationCode();
+        verificationCode.setUser(user);
+        verificationCode.setCodeHash(VerificationCodeHasher.hash(oldCode));
+        verificationCode.setExpiresAt(Instant.now().plus(Duration.ofMinutes(15)));
+        verificationCodeRepository.saveAndFlush(verificationCode);
+
+        // Simulate that 61 seconds have passed without making the test wait.
+        entityManager.createNativeQuery("""
+                UPDATE email_verification_codes
+                SET updated_at = (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')
+                    - INTERVAL '61 seconds'
+                WHERE user_id = :userId
+                """)
+                .setParameter("userId", user.getId())
+                .executeUpdate();
+
+        entityManager.clear();
+
+        mockMvc.perform(post("/api/auth/resend-verification")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "email": "%s"
+                                }
+                                """.formatted(email)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.retryAfterSeconds").value(60));
+
+        EmailVerificationCode refreshedCode = verificationCodeRepository
+                .findByUserId(user.getId())
+                .orElseThrow();
+
+        assertThat(refreshedCode.getCodeHash())
+                .isNotEqualTo(VerificationCodeHasher.hash(oldCode));
+
+        mockMvc.perform(post("/api/auth/verify")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "email": "%s",
+                                  "code": "%s"
+                                }
+                                """.formatted(email, oldCode)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error.code").value("INVALID_VERIFICATION_CODE"));
+    }
+
+    @Test
+    void resend_returnsTheSameGenericResponseForUnknownAndVerifiedEmails()
+            throws Exception {
+        String unknownEmail = "unknown-resend@ucdconnect.ie";
+        String verifiedEmail = "verified-resend@ucdconnect.ie";
+
+        mockMvc.perform(post("/api/auth/resend-verification")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                        {
+                          "email": "%s"
+                        }
+                        """.formatted(unknownEmail)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.retryAfterSeconds").value(60))
+                .andExpect(jsonPath("$.message").value(
+                        "If your account is eligible, a verification code has been sent"
+                ));
+
+        School school = schoolRepository.findByEmailDomain("ucdconnect.ie")
+                .orElseThrow();
+
+        User verifiedUser = new User();
+        verifiedUser.setEmail(verifiedEmail);
+        verifiedUser.setPasswordHash("$2a$dummy");
+        verifiedUser.setDisplayName("Verified Resend Student");
+        verifiedUser.setSchool(school);
+        verifiedUser.setRole(Role.STUDENT);
+        verifiedUser.setEmailVerified(true);
+        verifiedUser.setReputationScore(0);
+        userRepository.saveAndFlush(verifiedUser);
+
+        mockMvc.perform(post("/api/auth/resend-verification")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                        {
+                          "email": "%s"
+                        }
+                        """.formatted(verifiedEmail)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.retryAfterSeconds").value(60))
+                .andExpect(jsonPath("$.message").value(
+                        "If your account is eligible, a verification code has been sent"
+                ));
+
+        assertThat(
+                verificationCodeRepository.findByUserId(verifiedUser.getId())
+        ).isEmpty();
+    }
 }

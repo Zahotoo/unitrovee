@@ -297,4 +297,96 @@ describe('VerifyEmailPage', () => {
 
         expect(submitButton).toHaveTextContent('Verifying…')
     })
+
+    test('requests another verification code for the email in the URL', async () => {
+        mockedApiClient.mockResolvedValueOnce({
+            data: {
+                retryAfterSeconds: 60,
+            },
+            message: 'If your account is eligible, a verification code has been sent',
+        })
+
+        await router.navigate('/verify?email=aoife%40ucdconnect.ie')
+
+        render(<RouterProvider router={router} />)
+
+        fireEvent.click(
+            screen.getByRole('button', { name: 'Resend' }),
+        )
+
+        await waitFor(() => {
+            expect(mockedApiClient).toHaveBeenCalledWith(
+                '/auth/resend-verification',
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'aoife@ucdconnect.ie',
+                    }),
+                },
+            )
+        })
+    })
+
+    test('shows confirmation and starts the resend cooldown after success', async () => {
+        mockedApiClient.mockResolvedValueOnce({
+            data: {
+                retryAfterSeconds: 60,
+            },
+            message: 'If your account is eligible, a verification code has been sent',
+        })
+
+        await router.navigate('/verify?email=aoife%40ucdconnect.ie')
+
+        render(<RouterProvider router={router} />)
+
+        fireEvent.click(
+            screen.getByRole('button', { name: 'Resend' }),
+        )
+
+        expect(
+            await screen.findByRole('status'),
+        ).toHaveTextContent(
+            'Check your inbox - your code may already be there.',
+        )
+
+        expect(
+            screen.getByRole('button', {
+                name: /Resend code in \d+s/,
+            }),
+        ).toBeDisabled()
+    })
+
+    test('explains when the resend request fails', async () => {
+        mockedApiClient.mockRejectedValueOnce(
+            new ApiError(500, {
+                error: {
+                    code: 'INTERNAL_ERROR',
+                    message: 'An unexpected error occurred.',
+                },
+            }),
+        )
+
+        await router.navigate('/verify?email=aoife%40ucdconnect.ie')
+
+        render(<RouterProvider router={router} />)
+
+        fireEvent.click(
+            screen.getByRole('button', { name: 'Resend' }),
+        )
+
+        expect(
+            await screen.findByRole('status'),
+        ).toHaveTextContent(
+            'Unable to resend the code. Please try again.',
+        )
+
+        expect(
+            screen.getByRole('button', {
+                name: 'Resend',
+            }),
+        ).toBeEnabled()
+    })
 })

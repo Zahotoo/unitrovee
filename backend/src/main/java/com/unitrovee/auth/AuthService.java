@@ -6,6 +6,8 @@ import com.unitrovee.auth.dto.RegisterRequest;
 import com.unitrovee.auth.dto.RegisterResponse;
 import com.unitrovee.auth.dto.VerifyEmailRequest;
 import com.unitrovee.auth.dto.VerifyEmailResponse;
+import com.unitrovee.auth.dto.ResendVerificationRequest;
+import com.unitrovee.auth.dto.ResendVerificationResponse;
 
 public interface AuthService {
 
@@ -14,4 +16,6 @@ public interface AuthService {
     LoginResponse login(LoginRequest request);
 
     VerifyEmailResponse verifyEmail(VerifyEmailRequest request);
+
+    ResendVerificationResponse resendVerificationCode(ResendVerificationRequest request);
 }
