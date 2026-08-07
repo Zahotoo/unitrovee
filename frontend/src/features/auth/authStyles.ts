@@ -1,0 +1,2 @@
+export const authPrimaryButtonClass =
+    'bg-primary text-primary-foreground font-semibold shadow-[4px_4px_0px_0px_rgba(242,153,74,0.9)] transition hover:bg-primary hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[2px_2px_0px_0px_rgba(242,153,74,0.9)] disabled:cursor-not-allowed disabled:opacity-60'

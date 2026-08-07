@@ -389,4 +389,16 @@ describe('VerifyEmailPage', () => {
             }),
         ).toBeEnabled()
     })
+
+    test('uses the shared orange offset shadow for Verify Email', async () => {
+        await router.navigate('/verify?email=aoife%40ucdconnect.ie')
+
+        render(<RouterProvider router={router} />)
+
+        expect(
+            screen.getByRole('button', { name: 'Verify Email' }),
+        ).toHaveClass(
+            'shadow-[4px_4px_0px_0px_rgba(242,153,74,0.9)]',
+        )
+    })
 })

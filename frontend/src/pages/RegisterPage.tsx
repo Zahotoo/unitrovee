@@ -11,6 +11,7 @@ import {
 import { registerAccount } from '@/api/authApi'
 import { useState } from 'react'
 import { ApiError } from '@/api/client'
+import { authPrimaryButtonClass } from '@/features/auth/authStyles'
 
 type ErrorResponseBody = {
     error?: {
@@ -116,7 +117,7 @@ export function RegisterPage() {
                             aria-describedby={
                                 errors.displayName ? 'displayName-error' : undefined
                             }
-                            className="h-11 w-full rounded-lg border bg-muted px-3 text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                            className="h-11 w-full rounded-lg border-2 bg-muted px-3 text-foreground outline-none transition focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/20"
                             {...register('displayName')}
                         />
                         {errors.displayName && (
@@ -140,7 +141,7 @@ export function RegisterPage() {
                             autoComplete="email"
                             aria-invalid={errors.email ? 'true' : undefined}
                             aria-describedby={errors.email ? 'email-error' : undefined}
-                            className="h-11 w-full rounded-lg border bg-muted px-3 text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                            className="h-11 w-full rounded-lg border-2 bg-muted px-3 text-foreground outline-none transition focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/20"
                             {...register('email')}
                         />
                         {errors.email && (
@@ -164,7 +165,7 @@ export function RegisterPage() {
                             autoComplete="new-password"
                             aria-invalid={errors.password ? 'true' : undefined}
                             aria-describedby={errors.password ? 'password-error' : undefined}
-                            className="h-11 w-full rounded-lg border bg-muted px-3 text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                            className="h-11 w-full rounded-lg border-2 bg-muted px-3 text-foreground outline-none transition focus:border-primary focus:bg-card focus:ring-2 focus:ring-primary/20"
                             {...register('password')}
                         />
                         {errors.password && (
@@ -181,16 +182,23 @@ export function RegisterPage() {
                     <Button
                         type="submit"
                         variant="default"
-                        className="h-11 w-full"
+                        className={`h-11 w-full ${authPrimaryButtonClass}`}
                         disabled={isSubmitting}
                     >
                         {isSubmitting ? 'Creating account…' : 'Create account'}
                     </Button>
                 </form>
 
+                <div className="relative my-7">
+                    <div className="border-t"/>
+                    <span className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 bg-card px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Or
+                    </span>
+                </div>
+
                 <p className="mt-6 text-center text-sm text-muted-foreground">
                     Already have an account?{' '}
-                    <Link to="/login" className="font-medium text-primary hover:underline">
+                    <Link to="/login" className="font-semibold text-primary underline-offset-2 transition hover:underline">
                         Log in
                     </Link>
                 </p>
