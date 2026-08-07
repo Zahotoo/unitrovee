@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { RouterProvider } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
@@ -486,5 +486,47 @@ describe('RegisterPage', () => {
         expect(submitButton).toHaveClass('bg-primary')
         expect(submitButton).toHaveClass('text-primary-foreground')
         expect(submitButton).not.toHaveClass('bg-secondary')
+        expect(submitButton).toHaveClass(
+            'shadow-[4px_4px_0px_0px_rgba(242,153,74,0.9)]',
+        )
+        expect(submitButton).toHaveClass('font-semibold')
+        expect(submitButton).toHaveClass('hover:bg-primary')
+        expect(submitButton).not.toHaveClass('hover:bg-primary/80')
+    })
+
+    test('uses the shared focus treatment for registration fields', async () => {
+        await router.navigate('/register')
+
+        render(<RouterProvider router={router} />)
+
+        const fields = [
+            screen.getByRole('textbox', { name: 'Display name' }),
+            screen.getByRole('textbox', { name: 'University email' }),
+            screen.getByLabelText('Password'),
+        ]
+
+        for (const field of fields) {
+            expect(field).toHaveClass('border-2')
+            expect(field).toHaveClass('transition')
+            expect(field).toHaveClass('focus:bg-card')
+            expect(field).toHaveClass('focus:ring-primary/20')
+        }
+    })
+
+    test('uses the shared emphasis and hover treatment for the Log in link', async () => {
+        await router.navigate('/register')
+
+        render(<RouterProvider router={router} />)
+
+        const loginLink = within(
+            screen.getByRole('main'),
+        ).getByRole('link', {
+            name: 'Log in',
+        })
+
+        expect(loginLink).toHaveClass('font-semibold')
+        expect(loginLink).toHaveClass('underline-offset-2')
+        expect(loginLink).toHaveClass('hover:underline')
+        expect(loginLink).not.toHaveClass('underline')
     })
 })

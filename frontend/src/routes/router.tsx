@@ -7,6 +7,7 @@ import { QuerySample } from '@/pages/QuerySample'
 import { ProtectedRoute } from '@/routes/ProtectedRoute'
 import { RegisterPage } from '@/pages/RegisterPage'
 import { VerifyEmailPage } from '@/pages/VerifyEmailPage'
+import { LoginPage } from '@/pages/LoginPage'
 
 const placeholder = (title: string, description: string) => (
     <PagePlaceholder title={title} description={description} />
@@ -34,15 +35,15 @@ export const router = createBrowserRouter([
             },
             {
                 path: 'login',
-                element: placeholder('Log in', 'Access your unitrovee account.'),
+                element: <LoginPage />,
             },
             {
                 path: 'register',
-                element: <RegisterPage />
+                element: <RegisterPage />,
             },
             {
                 path: 'verify',
-                element: <VerifyEmailPage />
+                element: <VerifyEmailPage />,
             },
             {
                 path: 'items',

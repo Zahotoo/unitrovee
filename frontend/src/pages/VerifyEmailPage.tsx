@@ -4,6 +4,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { resendVerificationCode, verifyEmail } from '@/api/authApi'
 import { ApiError } from '@/api/client'
 import { verifyEmailSchema } from '@/features/auth/verifyEmailSchema'
+import { authPrimaryButtonClass } from '@/features/auth/authStyles'
 
 type ErrorResponseBody = {
     error?: {
@@ -164,7 +165,7 @@ export function VerifyEmailPage() {
 
                     <Link
                         to="/register"
-                        className="mt-6 inline-flex h-11 items-center justify-center rounded-lg bg-primary px-5 font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                        className={`mt-6 inline-flex h-11 items-center justify-center rounded-lg px-5 font-medium ${authPrimaryButtonClass}`}
                     >
                         Create an account
                     </Link>
@@ -243,7 +244,7 @@ export function VerifyEmailPage() {
                     <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-primary font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                        className={`mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-lg font-medium ${authPrimaryButtonClass}`}
                     >
                         {isSubmitting ? (
                             'Verifying…'
