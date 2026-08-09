@@ -5,6 +5,7 @@ import { resendVerificationCode, verifyEmail } from '@/api/authApi'
 import { ApiError } from '@/api/client'
 import { verifyEmailSchema } from '@/features/auth/verifyEmailSchema'
 import { authPrimaryButtonClass } from '@/features/auth/authStyles'
+import { AuthPageShell } from '@/features/auth/AuthPageShell'
 
 type ErrorResponseBody = {
     error?: {
@@ -148,7 +149,7 @@ export function VerifyEmailPage() {
 
     if (!email) {
         return (
-            <section className="bg-background px-4 py-12 sm:px-6 md:py-20">
+            <AuthPageShell>
                 <div className="relative mx-auto w-full max-w-md overflow-hidden rounded-2xl border bg-card p-6 text-center shadow-sm sm:p-10">
                     <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary to-secondary" />
 
@@ -170,12 +171,12 @@ export function VerifyEmailPage() {
                         Create an account
                     </Link>
                 </div>
-            </section>
+            </AuthPageShell>
         )
     }
 
     return (
-        <section className="bg-background px-4 py-12 sm:px-6 md:py-20">
+        <AuthPageShell>
             <div className="relative mx-auto w-full max-w-md overflow-hidden rounded-2xl border bg-card p-6 shadow-sm sm:p-10">
                 <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary to-secondary" />
 
@@ -292,6 +293,6 @@ export function VerifyEmailPage() {
                     </Link>
                 </div>
             </div>
-        </section>
+        </AuthPageShell>
     )
 }

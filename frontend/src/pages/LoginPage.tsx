@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useState } from 'react'
 import { ApiError } from '@/api/client'
 import { authPrimaryButtonClass } from '@/features/auth/authStyles'
+import { AuthPageShell } from '@/features/auth/AuthPageShell'
 
 import {
     loginSchema,
@@ -68,7 +69,7 @@ export function LoginPage() {
     })
 
     return (
-        <section className="bg-background px-4 py-12 sm:px-6 md:py-20">
+        <AuthPageShell>
             <div className="relative mx-auto w-full max-w-md overflow-hidden rounded-2xl border bg-card p-6 shadow-sm sm:p-10">
                 <div
                     data-testid="auth-card-gradient"
@@ -215,6 +216,6 @@ export function LoginPage() {
                     </Link>
                 </div>
             </div>
-        </section>
+        </AuthPageShell>
     )
 }

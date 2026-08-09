@@ -12,6 +12,7 @@ import { registerAccount } from '@/api/authApi'
 import { useState } from 'react'
 import { ApiError } from '@/api/client'
 import { authPrimaryButtonClass } from '@/features/auth/authStyles'
+import { AuthPageShell } from '@/features/auth/AuthPageShell'
 
 type ErrorResponseBody = {
     error?: {
@@ -79,7 +80,7 @@ export function RegisterPage() {
     }
 
     return (
-        <section className="bg-background px-4 py-12 sm:px-6 md:py-20">
+        <AuthPageShell>
             <div className="relative mx-auto w-full max-w-md overflow-hidden rounded-2xl border bg-card p-6 shadow-sm sm:p-10">
                 <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary to-secondary" />
                     <p className="mb-6 text-center text-2xl font-bold tracking-tight text-primary">
@@ -203,6 +204,6 @@ export function RegisterPage() {
                     </Link>
                 </p>
             </div>
-        </section>
+        </AuthPageShell>
     )
 }
